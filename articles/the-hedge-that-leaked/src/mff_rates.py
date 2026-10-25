@@ -197,11 +197,23 @@ def fit_svensson(u: pd.DataFrame, min_ttm=1.0, max_ttm=30.0):
     def resid(p):
         return (model(p) - dirty) * w
 
+    # Svensson fits have several local minima. To get the same answer on every machine we
+    # (1) fix the two decay parameters on a grid and fit the four betas, then
+    # (2) polish all six parameters from the three best grid points and keep the lowest cost.
+    lo, hi = [-0.1, -0.2, -0.5, -0.5, 0.1, 0.1], [0.2, 0.2, 0.5, 0.5, 30, 30]
+    grid = [0.3, 0.6, 1.0, 1.5, 2.5, 4.0, 6.0, 9.0, 13.0, 20.0]
+    starts = []
+    for t1 in grid:
+        for t2 in grid:
+            if t2 <= 1.2 * t1:
+                continue
+            r = least_squares(lambda b: resid([*b, t1, t2]), [0.04, 0.0, 0.0, 0.0], bounds=(lo[:4], hi[:4]))
+            starts.append((r.cost, [*r.x, t1, t2]))
+    starts.sort(key=lambda c: c[0])
     best = None
-    for t1, t2 in [(1.5, 8.0), (1.0, 5.0), (2.5, 12.0), (0.7, 3.0)]:
-        x0 = [0.04, 0.0, 0.0, 0.0, t1, t2]
-        r = least_squares(resid, x0, bounds=([-0.1, -0.2, -0.5, -0.5, 0.1, 0.1], [0.2, 0.2, 0.5, 0.5, 30, 30]))
-        if best is None or r.cost < best.cost:
+    for _, x0 in starts[:3]:
+        r = least_squares(resid, x0, bounds=(lo, hi), xtol=1e-12, ftol=1e-12, gtol=1e-12)
+        if best is None or r.cost < best.cost - 1e-12:
             best = r
     v["model_dirty"] = model(best.x)
     v["price_err"] = v["model_dirty"] - v["dirty"]
