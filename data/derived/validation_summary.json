@@ -19,6 +19,12 @@
    "ours": 68,
    "only_cme": 0,
    "only_ours": 0
+  },
+  "TN": {
+   "cme": 3,
+   "ours": 3,
+   "only_cme": 0,
+   "only_ours": 0
   }
  },
  "futures_vs_yahoo": {
@@ -33,6 +39,18 @@
    "mean": 0.97,
    "mean_abs": 3.83,
    "max_abs": 13.93
+  },
+  "TN 2023-03": {
+   "n": 37,
+   "mean": 0.76,
+   "mean_abs": 1.66,
+   "max_abs": 5.14
+  },
+  "TN 2023-06": {
+   "n": 7,
+   "mean": 1.05,
+   "mean_abs": 2.66,
+   "max_abs": 6.84
   },
   "TU 2023-03": {
    "n": 37,
@@ -62,6 +80,8 @@
  "futures_daily_change_mae_32nds": {
   "FV 2023-03": 1.18,
   "FV 2023-06": 4.28,
+  "TN 2023-03": 2.21,
+  "TN 2023-06": 3.82,
   "TU 2023-03": 0.78,
   "TU 2023-06": 1.58,
   "TY 2023-03": 1.78,
@@ -85,6 +105,6 @@
   }
  },
  "curve_days": 62,
- "pnl_decomposition_max_gap_usd": 1.1641532182693481e-10,
- "krd_vs_full_curve_reval_corr": 0.9978
+ "pnl_decomposition_max_gap_usd": 4.656612873077393e-10,
+ "krd_vs_full_curve_reval_corr": 0.9992
 }
