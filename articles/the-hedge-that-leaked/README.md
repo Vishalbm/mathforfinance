@@ -28,7 +28,7 @@ Or open `the_hedge_that_leaked.ipynb`, which runs the same steps and shows the r
 
 - Conversion factors: 2,194 of 2,194 match CME's published values to 4 decimals.
 - Deliverable baskets (TU, FV, TY): our rules select exactly the securities CME lists, no more, no fewer.
-- Fitted curve vs the Fed's GSW curve, 62 days: mean absolute gap 1.1bp (2y), 0.8bp (5y), 4.9bp (10y).
+- Fitted curve vs the Fed's GSW curve, 62 days: mean absolute gap 1.0bp (2y), 0.9bp (5y), 5.0bp (10y).
 - Futures model vs Yahoo front-contract closes, Jan–Feb 2023: mean absolute gap 1.0–1.5/32nds.
 - P&L decomposition adds back to the total (largest gap < $0.000001).
 
