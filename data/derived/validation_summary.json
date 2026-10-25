@@ -69,22 +69,22 @@
  },
  "curve_vs_gsw_bp": {
   "2y": {
-   "mean": -0.63,
-   "mean_abs": 1.09,
+   "mean": -0.58,
+   "mean_abs": 1.04,
    "max_abs": 3.98
   },
   "5y": {
-   "mean": -0.31,
-   "mean_abs": 0.83,
+   "mean": -0.33,
+   "mean_abs": 0.86,
    "max_abs": 3.59
   },
   "10y": {
-   "mean": 4.56,
-   "mean_abs": 4.89,
-   "max_abs": 10.24
+   "mean": 4.68,
+   "mean_abs": 5.0,
+   "max_abs": 11.15
   }
  },
  "curve_days": 62,
  "pnl_decomposition_max_gap_usd": 1.1641532182693481e-10,
- "krd_vs_full_curve_reval_corr": 0.993
+ "krd_vs_full_curve_reval_corr": 0.9978
 }
