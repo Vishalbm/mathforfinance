@@ -16,6 +16,14 @@ pip install -r requirements.txt
 
 The KDB+/q file needs a q installation from [KX](https://kx.com).
 
+## Articles with full data and notebooks
+
+| Article | Folder |
+|---|---|
+| The Hedge That Leaked: why a DV01-matched Treasury futures hedge lost money when SVB failed | [`articles/the-hedge-that-leaked`](articles/the-hedge-that-leaked) |
+
+These rebuild every number from raw public data saved in [`data/raw`](data/raw) (see [`data/README.md`](data/README.md)).
+
 ## Code by track
 
 Files are numbered by the post's position in its track's reading order.
