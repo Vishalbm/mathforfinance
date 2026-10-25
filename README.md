@@ -20,7 +20,7 @@ The KDB+/q file needs a q installation from [KX](https://kx.com).
 
 | Article | Folder |
 |---|---|
-| The Hedge That Leaked: why a DV01-matched Treasury futures hedge lost money when SVB failed | [`articles/the-hedge-that-leaked`](articles/the-hedge-that-leaked) |
+| The Hedge That Leaked: why hedging a 10-year Treasury with TY lost $906k when SVB failed | [`articles/the-hedge-that-leaked`](articles/the-hedge-that-leaked) |
 
 These rebuild every number from raw public data saved in [`data/raw`](data/raw) (see [`data/README.md`](data/README.md)).
 
