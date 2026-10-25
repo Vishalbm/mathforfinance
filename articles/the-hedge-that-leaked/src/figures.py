@@ -50,10 +50,10 @@ def fig_krd():
     r = pd.read_csv("data/derived/daily_risk_snapshot.csv", parse_dates=["date"]).set_index("date").loc["2023-03-08"]
     h = pd.read_csv("data/derived/daily_hedge_pnl.csv", parse_dates=["start"])
     n = h[(h.start == "2023-03-08") & (h.hedge == "DV01 with 10y futures (TY)")]["n_TY"].iloc[0]
-    keys = ["2y", "5y", "10y"]
+    keys = ["1y", "2y", "3y", "5y", "7y", "10y"]
     bond = np.array([r[f"bond_krd_{k}"] for k in keys])
     fut = np.array([n * r[f"TY_krd_{k}"] for k in keys])
-    x = np.arange(3); w = 0.36
+    x = np.arange(len(keys)); w = 0.38
     fig, ax = plt.subplots(figsize=(9, 4.8))
     b1 = ax.bar(x - w / 2 - 0.01, bond, w, color=S[0], label=r"Short \$100mm 5-year note")
     b2 = ax.bar(x + w / 2 + 0.01, fut, w, color=S[1], label=f"Long {n:.0f} 10-year futures (TY)")

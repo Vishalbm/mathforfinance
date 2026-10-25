@@ -98,10 +98,12 @@ def hedge_ratios(snap, L):
     H = {"Unhedged": {}}
     H["DV01 with 10y futures (TY)"] = {"TY": -dv(pos) / dv(f["TY"])}
     H["DV01 with 5y futures (FV)"] = {"FV": -dv(pos) / dv(f["FV"])}
-    M = np.column_stack([f[c][:3] for c in ("TU", "FV", "TY")])
-    n = np.linalg.solve(M, -pos[:3])
+    # key-rate hedge: match risk in three buckets (1-3y -> TU, 5y -> FV, 7-30y -> TY)
+    B = np.array([[1, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 1, 1]], float)
+    M = np.column_stack([B @ f[c] for c in ("TU", "FV", "TY")])
+    n = np.linalg.solve(M, -(B @ pos))
     H["Key-rate hedge (TU+FV+TY)"] = dict(zip(("TU", "FV", "TY"), n))
-    Lk = L.loc[["2Y", "5Y", "10Y", "30Y"], ["PC1", "PC2"]].to_numpy()   # loadings at the key tenors
+    Lk = L[["PC1", "PC2"]].to_numpy()                                      # loadings at the key tenors
     E = lambda krd: krd @ Lk                                             # $ per 1-unit factor move (in bp)
     M2 = np.column_stack([E(f["TU"]), E(f["TY"])])
     n2 = np.linalg.solve(M2, -E(pos))
@@ -151,9 +153,11 @@ def main():
         H, pos, f = hedge_ratios(snap, L)
         full = reprice(snap, u1, p1, repo0, month, curve_only=False)
         curve = reprice(snap, u1, p1, repo0, month, curve_only=True)
-        dz = np.array([svensson_zero(k, p1) - svensson_zero(k, p0) for k in KEYS]) * 1e4   # bp
-        Lk = L.loc[["2Y", "5Y", "10Y", "30Y"]].to_numpy()
-        fac = np.linalg.lstsq(Lk, dz, rcond=None)[0]                                     # factor moves (bp units)
+        dz = np.array([svensson_zero(k, p1) - svensson_zero(k, p0) for k in KEYS]) * 1e4   # bp, zero rates
+        Lk = L.to_numpy()
+        cols = ["1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
+        dpar = (PAR.loc[t1, cols] - PAR.loc[t0, cols]).to_numpy() * 100                    # bp, official par yields
+        fac = Lk.T @ dpar                                                                  # factor moves (bp units)
         for name, h in H.items():
             def pnl(px):
                 v = -FACE / 100 * (px["BOND"] - snap["BOND"]["price"])

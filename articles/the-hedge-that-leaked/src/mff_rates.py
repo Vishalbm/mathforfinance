@@ -218,7 +218,7 @@ def solve_spread(flows, zero_fn, dirty):
 
 
 # ---------------------------------------------------------------- key-rate shocks
-KEYS = np.array([2.0, 5.0, 10.0, 30.0])
+KEYS = np.array([1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0])   # same tenors as the Treasury par curve
 
 
 def key_shape(t, k_idx, keys=KEYS):
