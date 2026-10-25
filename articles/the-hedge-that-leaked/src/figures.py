@@ -34,34 +34,41 @@ def fig_curve_move():
     cols = ["1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "20Y", "30Y"]
     d = (p.loc["2023-03-13", cols] - p.loc["2023-03-08", cols]) * 100
     fig, ax = plt.subplots(figsize=(9, 4.8))
-    bars = ax.bar(cols, d.values, color=S[0], width=0.6)
+    colors = [S[1] if c in ("7Y", "10Y") else "#9db9e0" for c in cols]
+    bars = ax.bar(cols, d.values, color=colors, width=0.6)
     for b, v in zip(bars, d.values):
         ax.text(b.get_x() + b.get_width() / 2, v - 4, f"{v:.0f}", ha="center", va="top", color=INK, fontsize=10)
     ax.axhline(0, color=INK2, lw=1)
     ax.set_ylabel("Change in yield (basis points)")
     ax.set_ylim(min(d.values) * 1.2, 10)
-    title(ax, "Not a parallel move: short yields fell twice as far as 10s",
+    title(ax, "Not a parallel move: the 7-year fell 11bp more than the 10-year",
           "US Treasury par yields, change from close 8 Mar 2023 to close 13 Mar 2023")
     fig.text(0.01, 0.01, "Source: US Treasury daily par yield curve. mathforfinance.com", fontsize=8.5, color=INK2)
     fig.tight_layout(rect=(0, 0.03, 1, 1)); fig.savefig("articles/the-hedge-that-leaked/figures/fig1_curve_move.png", dpi=160); plt.close(fig)
 
 
+ORDER = ["DV01 hedge, TY", "DV01 hedge, UXY", "Key-rate hedge (FV+TY+UXY)", "PCA hedge, level+slope (FV+UXY)"]
+SHORT = {"DV01 hedge, TY": "DV01 hedge, TY", "DV01 hedge, UXY": "DV01 hedge, UXY",
+         "Key-rate hedge (FV+TY+UXY)": "Key-rate hedge", "PCA hedge, level+slope (FV+UXY)": "PCA hedge (2 factors)"}
+KEYS_ALL = [1, 2, 3, 5, 7, 10, 20, 30]
+
+
 def fig_krd():
     r = pd.read_csv("data/derived/daily_risk_snapshot.csv", parse_dates=["date"]).set_index("date").loc["2023-03-08"]
     h = pd.read_csv("data/derived/daily_hedge_pnl.csv", parse_dates=["start"])
-    n = h[(h.start == "2023-03-08") & (h.hedge == "DV01 with 10y futures (TY)")]["n_TY"].iloc[0]
+    n = h[(h.start == "2023-03-08") & (h.hedge == ORDER[0])]["n_TY"].iloc[0]
     keys = ["1y", "2y", "3y", "5y", "7y", "10y"]
     bond = np.array([r[f"bond_krd_{k}"] for k in keys])
     fut = np.array([n * r[f"TY_krd_{k}"] for k in keys])
     x = np.arange(len(keys)); w = 0.38
     fig, ax = plt.subplots(figsize=(9, 4.8))
-    b1 = ax.bar(x - w / 2 - 0.01, bond, w, color=S[0], label=r"Short \$100mm 5-year note")
-    b2 = ax.bar(x + w / 2 + 0.01, fut, w, color=S[1], label=f"Long {n:.0f} 10-year futures (TY)")
+    b1 = ax.bar(x - w / 2 - 0.01, bond, w, color=S[0], label=r"Long \$100mm 10-year note")
+    b2 = ax.bar(x + w / 2 + 0.01, fut, w, color=S[1], label=f"Short {abs(n):.0f} TY futures")
     for bars in (b1, b2):
         for b in bars:
             v = b.get_height()
-            if abs(v) > 500:
-                ax.text(b.get_x() + b.get_width() / 2, v + (900 if v > 0 else -900), f"{v/1e3:+.0f}k",
+            if abs(v) > 1500:
+                ax.text(b.get_x() + b.get_width() / 2, v + (1500 if v > 0 else -1500), f"{v/1e3:+.0f}k",
                         ha="center", va="bottom" if v > 0 else "top", fontsize=10, color=INK)
     ax.axhline(0, color=INK2, lw=1)
     ax.set_xticks(x, [f"{k} key rate" for k in keys])
@@ -69,19 +76,15 @@ def fig_krd():
     ax.set_ylabel(r"\$ P&L if that key rate falls 1bp")
     ax.legend(frameon=False, loc="lower left")
     title(ax, "Same total DV01, different places on the curve",
-          f"Key-rate exposure on 8 Mar 2023. Total DV01 nets to zero, but the risk sits at different points")
-    fig.text(0.01, 0.01, "Source: mathforfinance.com calculations from Treasury FedInvest prices; TY CTD 3.875% Dec-2029.", fontsize=8.5, color=INK2)
+          "Key-rate exposure on 8 Mar 2023. The note's risk sits at 10 years; TY's sits at 7 years")
+    fig.text(0.01, 0.01, "Source: mathforfinance.com calculations from Treasury FedInvest prices; June 2023 TY CTD: 3.875% Dec-2029.", fontsize=8.5, color=INK2)
     fig.tight_layout(rect=(0, 0.03, 1, 1)); fig.savefig("articles/the-hedge-that-leaked/figures/fig2_key_rate_risk.png", dpi=160); plt.close(fig)
-
-
-ORDER = ["DV01 with 10y futures (TY)", "DV01 with 5y futures (FV)", "Key-rate hedge (TU+FV+TY)", "PCA hedge, level+slope (TU+TY)"]
-SHORT = {"DV01 with 10y futures (TY)": "DV01 hedge, 10y futures", "DV01 with 5y futures (FV)": "DV01 hedge, 5y futures",
-         "Key-rate hedge (TU+FV+TY)": "Key-rate hedge", "PCA hedge, level+slope (TU+TY)": "PCA hedge (2 factors)"}
 
 
 def fig_cum():
     h = pd.read_csv("data/derived/daily_hedge_pnl.csv", parse_dates=["date", "start"])
     h = h[h.start >= "2023-03-01"]
+    unh = h[h.hedge == "Unhedged"].pnl.sum()
     fig, ax = plt.subplots(figsize=(9.5, 5))
     ax.axvspan(pd.Timestamp("2023-03-08"), pd.Timestamp("2023-03-13"), color="#f0efec", zorder=0)
     ax.text(pd.Timestamp("2023-03-08 06:00"), 0.97, "SVB fails", transform=ax.get_xaxis_transform(), fontsize=9.5, color=INK2, va="top")
@@ -89,40 +92,58 @@ def fig_cum():
         s = h[h.hedge == name].set_index("date")["pnl"].cumsum()
         s = pd.concat([pd.Series({pd.Timestamp("2023-03-01"): 0.0}), s])
         ax.plot(s.index, s.values, color=S[i], lw=2, label=SHORT[name])
-        ax.text(s.index[-1] + pd.Timedelta(hours=10), s.values[-1], SHORT[name], color=INK, fontsize=9.5, va="center")
     ax.axhline(0, color=INK2, lw=1)
     ax.yaxis.set_major_formatter(usd)
-    ax.set_xlim(pd.Timestamp("2023-03-01"), pd.Timestamp("2023-04-07"))
+    ax.set_xlim(pd.Timestamp("2023-03-01"), pd.Timestamp("2023-03-31"))
     ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%d %b"))
     ax.set_ylabel("Cumulative P&L of hedged position")
     ax.legend(frameon=False, loc="lower left", fontsize=9.5)
-    title(ax, "When the curve twisted, the 10-year DV01 hedge leaked most",
-          r"Short \$100mm on-the-run 5-year note, hedge rebalanced daily, March 2023 (unhedged: -\$2.5mm for the month)")
+    title(ax, "Hedging the 10-year with TY leaked; UXY held",
+          rf"Long \$100mm 10-year note, hedges rebalanced daily. Unhedged, the note made +\${unh/1e6:.1f}mm in March")
     fig.text(0.01, 0.01, "Futures valued from cheapest-to-deliver forward prices (no delivery option). Source: mathforfinance.com", fontsize=8.5, color=INK2)
     fig.tight_layout(rect=(0, 0.03, 1, 1)); fig.savefig("articles/the-hedge-that-leaked/figures/fig3_cumulative_pnl.png", dpi=160); plt.close(fig)
 
 
-def fig_waterfall():
+def waterfall_parts(hedge=ORDER[0], start="2023-03-08", end="2023-03-13"):
+    """Split the hedge's P&L by key rate: net key-rate exposure x fall in that zero rate, summed daily."""
     h = pd.read_csv("data/derived/daily_hedge_pnl.csv", parse_dates=["date", "start"])
-    w = h[(h.start >= "2023-03-08") & (h.date <= "2023-03-13") & (h.hedge == ORDER[0])].sum(numeric_only=True)
-    parts = [("Level\n(PC1)", w.pc1), ("Slope\n(PC2)", w.pc2), ("Curvature\n(PC3)", w.pc3),
-             ("Other curve\nshape", w.curve_resid), ("Carry, financing\n& basis", w.other_pnl)]
+    r = pd.read_csv("data/derived/daily_risk_snapshot.csv", parse_dates=["date"]).set_index("date")
+    w = h[(h.start >= start) & (h.date <= end) & (h.hedge == hedge)]
+    by_key = {k: 0.0 for k in KEYS_ALL}
+    for row in w.itertuples():
+        s = r.loc[row.start]
+        for k in KEYS_ALL:
+            net = s[f"bond_krd_{k}y"] + sum(getattr(row, f"n_{c}") * s[f"{c}_krd_{k}y"] for c in ("FV", "TY", "TN"))
+            by_key[k] += net * (-s[f"dz_{k}y_next"])
+    tot = w.sum(numeric_only=True)
+    parts = [("1-5y key\nrates", sum(by_key[k] for k in (1, 2, 3, 5))), ("7y key\nrate", by_key[7]),
+             ("10-30y key\nrates", sum(by_key[k] for k in (10, 20, 30))),
+             ("Convexity &\ncurve shape", tot.curve_pnl - tot.krd_pred), ("Carry, financing\n& basis", tot.other_pnl)]
+    return parts, tot.pnl
+
+
+def fig_waterfall():
+    parts, total = waterfall_parts()
+    assert abs(sum(v for _, v in parts) - total) < 1.0
     fig, ax = plt.subplots(figsize=(9.5, 5))
     run = 0.0
+    span = max(abs(v) for _, v in parts)
+    off = span * 0.03
     for i, (lab, v) in enumerate(parts):
         ax.bar(i, v, bottom=run, color=GAIN if v >= 0 else LOSS, width=0.62)
-        ax.text(i, run + v + (12000 if v >= 0 else -12000), f"{v/1e3:+,.0f}k", ha="center",
+        ax.text(i, run + v + (off if v >= 0 else -off), f"{v/1e3:+,.0f}k", ha="center",
                 va="bottom" if v >= 0 else "top", fontsize=10, color=INK)
         run += v
     ax.bar(len(parts), run, color=NEUT, width=0.62)
-    ax.text(len(parts), run - 12000, f"{run/1e3:+,.0f}k", ha="center", va="top", fontsize=10, color=INK, fontweight="bold")
+    ax.text(len(parts), run - off, f"{run/1e3:+,.0f}k", ha="center", va="top", fontsize=10, color=INK, fontweight="bold")
     ax.set_xticks(range(len(parts) + 1), [p[0] for p in parts] + ["Total"])
     ax.axhline(0, color=INK2, lw=1)
     ax.yaxis.set_major_formatter(usd)
-    ax.set_ylim(run * 1.35, max(60000, run * -0.25))
-    title(ax, "Where the money went: the slope of the curve",
-          "P&L of the DV01-matched 10-year futures hedge, close 8 Mar to close 13 Mar 2023")
-    fig.text(0.01, 0.01, "Factors from PCA of daily Treasury par-yield changes over the prior 250 days. Source: mathforfinance.com", fontsize=8.5, color=INK2)
+    lo = min(0, min(np.cumsum([v for _, v in parts]))) ; hi = max(0, max(np.cumsum([v for _, v in parts])))
+    ax.set_ylim(lo - span * 0.25, hi + span * 0.2)
+    title(ax, "Where the money went: long 10s, short 7s",
+          "P&L of the 10-year note hedged with TY at zero DV01, close 8 Mar to close 13 Mar 2023")
+    fig.text(0.01, 0.01, "Each key rate: net exposure x fall in that zero rate, summed daily. Source: mathforfinance.com", fontsize=8.5, color=INK2)
     fig.tight_layout(rect=(0, 0.03, 1, 1)); fig.savefig("articles/the-hedge-that-leaked/figures/fig4_waterfall.png", dpi=160); plt.close(fig)
 
 

@@ -151,6 +151,9 @@ def eligible(contract: str, maturity, first_issue, delivery_first_day) -> bool:
         return orig_ok_5y3m and m >= _add(d0, 1, 9) and m <= _add(d_last, 2, 0)
     if contract == "FV":
         return orig_ok_5y3m and m >= _add(d0, 4, 2)
+    if contract == "TN":   # Ultra 10-year (Bloomberg: UXY): original 10-year notes, 9y5m to 10y left
+        orig_10y = _add(iss, 9, 5) <= m <= _add(iss, 10, 0) + pd.Timedelta(days=7)
+        return orig_10y and _add(d0, 9, 5) <= m <= _add(d0, 10, 0)
     if contract == "TY":
         is_note = m <= _add(iss, 10, 0) + pd.Timedelta(days=7)  # notes only: original term <= 10y
         return is_note and m >= _add(d0, 6, 6) and m < _add(d0, 8, 0)

@@ -20,7 +20,7 @@ d = pd.read_excel("data/raw/cme_treasury_conversion_factors_TCF_2026-10-21.xlsx"
 sec = d.iloc[4:, [3, 4, 5, 6]].dropna(); sec.columns = ["coupon", "issue", "maturity", "cusip"]
 sec = sec[sec.cusip.astype(str).str.match(r"912")]
 bk = {}
-for c in ["TU", "FV", "TY"]:
+for c in ["TU", "FV", "TY", "TN"]:
     months = sorted(t[t.contract == c].delivery.unique())
     have = set(zip(t[t.contract == c].cusip, t[t.contract == c].delivery))
     ours = {(r.cusip, m) for r in sec.itertuples() for m in months if eligible(c, r.maturity, r.issue, m)}
@@ -30,7 +30,7 @@ out["baskets"] = bk
 # 3. Theoretical futures vs Yahoo Finance daily closes (front contract)
 P, A, R = load_fedinvest(), load_auctions(), load_repo("tgcr")
 rows = []
-for s, c in [("ZT", "TU"), ("ZF", "FV"), ("ZN", "TY")]:
+for s, c in [("ZT", "TU"), ("ZF", "FV"), ("ZN", "TY"), ("TN", "TN")]:
     y = pd.read_csv(f"data/raw/yahoo_{s}_front_continuous_2023Q1.csv", parse_dates=["date"]).set_index("date")["close"]
     for dt in y.index:
         if dt <= pd.Timestamp("2023-02-24"): mon = "2023-03-01"
