@@ -10,7 +10,7 @@ Raw files exactly as downloaded on 25 October 2026 (cleaned only by dropping col
 | `raw/fedinvest_prices_2023-01.csv` … `-03.csv` | End-of-day prices for every marketable Treasury note and bond (bills, TIPS and FRNs removed) | [TreasuryDirect FedInvest historical prices](https://www.treasurydirect.gov/GA-FI/FedInvest/selectSecurityPriceDate) |
 | `raw/treasurydirect_auctions_notes_bonds_2010_2023Q1.csv` | Auction records: CUSIP, original term, issue/dated/maturity dates, coupon | [TreasuryDirect securities API](https://www.treasurydirect.gov/webapis/webapisecurities.htm) |
 | `raw/cme_treasury_conversion_factors_TCF_2026-10-21.xlsx` | CME's published conversion factors and deliverable securities for currently listed Treasury futures (used to test our formula and basket rules) | [CME Group, Treasury Conversion Factors](https://www.cmegroup.com/trading/interest-rates/treasury-conversion-factors.html) |
-| `raw/yahoo_ZT/ZF/ZN_front_continuous_2023Q1.csv` | Daily closes of the front 2y/5y/10y Treasury futures. Third-party data, used **only as a check** on our futures model | Yahoo Finance chart data |
+| `raw/yahoo_ZT/ZF/ZN/TN_front_continuous_2023Q1.csv` | Daily closes of the front 2-year, 5-year, 10-year and Ultra 10-year Treasury futures. Third-party data, used **only as a check** on our futures model | Yahoo Finance chart data |
 
 Notes
 - FedInvest prices are clean prices per 100 face. We use the `end_of_day` column.
