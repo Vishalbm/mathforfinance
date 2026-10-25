@@ -1,0 +1,31 @@
+name: Reproduce "The Hedge That Leaked"
+on:
+  push:
+    paths: ["articles/the-hedge-that-leaked/**", "data/raw/**"]
+  workflow_dispatch:
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: pip install -r articles/the-hedge-that-leaked/requirements-lock.txt
+      - run: |
+          python articles/the-hedge-that-leaked/src/validate_cf.py
+          python articles/the-hedge-that-leaked/src/experiment.py
+          python articles/the-hedge-that-leaked/src/validation.py
+      - name: Results must match the committed numbers
+        run: |
+          python - <<'PY'
+          import io, json, subprocess, pandas as pd
+          new = json.load(open("data/derived/validation_summary.json"))
+          old = json.loads(subprocess.check_output(["git", "show", "HEAD:data/derived/validation_summary.json"]))
+          for k in ("pnl_decomposition_max_gap_usd",):
+              assert new[k] < 1e-3, k; new.pop(k); old.pop(k)
+          assert new == old, "validation summary changed"
+          a = pd.read_csv("data/derived/daily_hedge_pnl.csv")
+          b = pd.read_csv(io.BytesIO(subprocess.check_output(["git", "show", "HEAD:data/derived/daily_hedge_pnl.csv"])))
+          assert (a.pnl - b.pnl).abs().max() < 1.0, "hedge P&L moved by more than $1"
+          print("Reproduced: all checks match the committed results.")
+          PY
